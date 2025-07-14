@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Political Compass Quiz</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Georgia', serif;
+      background-color: #1e1e1c;
+      color: #eaeaea;
+      background-image: url('https://images.unsplash.com/photo-1505664194779-8beaceb93744?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80');
+      background-size: cover;
+      background-attachment: fixed;
+    }
+    .container {
+      background: rgba(0, 0, 0, 0.85);
+      padding: 2rem;
+      max-width: 800px;
+      margin: 3rem auto;
+      border-radius: 16px;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    }
+    h1, h2 {
+      text-align: center;
+      color: #f5f5dc;
+    }
+    .question {
+      margin-bottom: 2rem;
+    }
+    .question p {
+      font-size: 1.2rem;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    button {
+      background-color: #444;
+      color: white;
+      padding: 0.75rem 2rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: block;
+      margin: 2rem auto 0 auto;
+    }
+    button:hover {
+      background-color: #666;
+    }
+    .hidden {
+      display: none;
+    }
+    #result {
+      text-align: center;
+      font-size: 1.2rem;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🕯️ Political Compass Quiz</h1>
+    <p style="text-align:center;font-style:italic;">Discover where your beliefs align on the ideological spectrum.</p>
+    <div id="quiz"></div>
+    <button id="submit">Reveal My Inclination</button>
+    <div id="result" class="hidden">
+      <h2>Your Result:</h2>
+      <p id="description"></p>
+    </div>
+  </div>
+  <script>
+    const questions = [
+      // Economic Axis (1–8)
+      { text: "The government should provide free healthcare and education for all.", axis: "econ", effect: -1 },
+      { text: "Wealth should be redistributed to reduce inequality.", axis: "econ", effect: -1 },
+      { text: "Higher taxes on the rich are necessary for a fair society.", axis: "econ", effect: -1 },
+      { text: "Private corporations exploit workers for profit.", axis: "econ", effect: -1 },
+      { text: "Free markets are the best way to ensure economic growth.", axis: "econ", effect: 1 },
+      { text: "Welfare programs often make people dependent on the state.", axis: "econ", effect: 1 },
+      { text: "Minimum wage laws hurt small businesses more than they help workers.", axis: "econ", effect: 1 },
+      { text: "The government should not interfere in the economy.", axis: "econ", effect: 1 },
+
+      // Social Axis (9–16)
+      { text: "The state must have strong law enforcement even if some civil liberties are sacrificed.", axis: "soc", effect: 1 },
+      { text: "Protesters disrupting public order should be punished strictly.", axis: "soc", effect: 1 },
+      { text: "National security justifies the use of mass surveillance.", axis: "soc", effect: 1 },
+      { text: "The state should be able to censor hate speech and misinformation.", axis: "soc", effect: 1 },
+      { text: "Everyone should be free to express controversial or offensive opinions.", axis: "soc", effect: -1 },
+      { text: "People should be allowed to use drugs if they wish.", axis: "soc", effect: -1 },
+      { text: "The government has no right to tell individuals what to do with their bodies.", axis: "soc", effect: -1 },
+      { text: "Children should be taught to question authority, not blindly obey it.", axis: "soc", effect: -1 },
+
+      // Cultural Axis (17–24)
+      { text: "Traditional family structures are the backbone of society.", axis: "cult", effect: 1 },
+      { text: "LGBTQ+ rights should be prioritized in all national policy discussions.", axis: "cult", effect: -1 },
+      { text: "Religion should play a major role in shaping our laws.", axis: "cult", effect: 1 },
+      { text: "Political correctness has gone too far in society.", axis: "cult", effect: 1 },
+      { text: "Historical injustices must be actively corrected through reparative policies.", axis: "cult", effect: -1 },
+      { text: "Society should embrace gender fluidity and non-binary identities.", axis: "cult", effect: -1 },
+      { text: "Cultural heritage should be preserved, even if it conflicts with modern values.", axis: "cult", effect: 1 },
+      { text: "Multiculturalism enriches our society.", axis: "cult", effect: -1 },
+
+      // Global Axis (25–32)
+      { text: "Immigration should be strictly controlled to protect national culture.", axis: "glob", effect: 1 },
+      { text: "National sovereignty is more important than international cooperation.", axis: "glob", effect: 1 },
+      { text: "Our country should prioritize citizens over foreign aid.", axis: "glob", effect: 1 },
+      { text: "The UN and other global bodies interfere too much in domestic matters.", axis: "glob", effect: 1 },
+      { text: "We should welcome refugees and help them integrate.", axis: "glob", effect: -1 },
+      { text: "Borders should be open to trade and labor migration.", axis: "glob", effect: -1 },
+      { text: "Climate change needs global cooperation, even at national economic cost.", axis: "glob", effect: -1 },
+      { text: "Patriotism often becomes a tool for exclusion and violence.", axis: "glob", effect: -1 }
+    ];
+
+    const quizContainer = document.getElementById("quiz");
+    questions.forEach((q, i) => {
+      const div = document.createElement("div");
+      div.className = "question";
+      div.innerHTML = `
+        <p>Q${i + 1}. ${q.text}</p>
+        <input type="range" min="1" max="5" value="3" data-index="${i}" />
+      `;
+      quizContainer.appendChild(div);
+    });
+
+    document.getElementById("submit").addEventListener("click", () => {
+      const ranges = document.querySelectorAll("input[type='range']");
+      let scores = { econ: 0, soc: 0, cult: 0, glob: 0 };
+
+      ranges.forEach(r => {
+        const i = parseInt(r.dataset.index);
+        const value = parseInt(r.value) - 3;
+        scores[questions[i].axis] += value * questions[i].effect;
+      });
+
+      const axisLabels = {
+        econ: scores.econ < 0 ? "Left" : "Right",
+        soc: scores.soc < 0 ? "Libertarian" : "Authoritarian",
+        cult: scores.cult < 0 ? "Progressive" : "Conservative",
+        glob: scores.glob < 0 ? "Globalist" : "Nationalist"
+      };
+
+      const resultText = `🧭 You are a <strong>${axisLabels.cult} ${axisLabels.soc} ${axisLabels.econ}</strong> with <strong>${axisLabels.glob}</strong> leanings.`;
+
+      document.getElementById("description").innerHTML = resultText;
+      document.getElementById("result").classList.remove("hidden");
+      window.scrollTo(0, document.body.scrollHeight);
+    });
+  </script>
+</body>
+</html>
