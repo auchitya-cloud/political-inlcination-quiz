@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Political Compass Quiz</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       margin: 0;
@@ -57,6 +58,10 @@
       font-size: 1.2rem;
       margin-top: 2rem;
     }
+    canvas {
+      max-width: 100%;
+      margin-top: 2rem;
+    }
   </style>
 </head>
 <body>
@@ -68,6 +73,7 @@
     <div id="result" class="hidden">
       <h2>Your Result:</h2>
       <p id="description"></p>
+      <canvas id="resultChart"></canvas>
     </div>
   </div>
   <script>
@@ -142,9 +148,36 @@
       };
 
       const resultText = `🧭 You are a <strong>${axisLabels.cult} ${axisLabels.soc} ${axisLabels.econ}</strong> with <strong>${axisLabels.glob}</strong> leanings.`;
-
       document.getElementById("description").innerHTML = resultText;
       document.getElementById("result").classList.remove("hidden");
+
+      const ctx = document.getElementById('resultChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: ['Economic', 'Social', 'Cultural', 'Global'],
+          datasets: [{
+            label: 'Political Profile',
+            data: [scores.econ, scores.soc, scores.cult, scores.glob],
+            backgroundColor: 'rgba(255, 206, 86, 0.2)',
+            borderColor: 'rgba(255, 206, 86, 1)',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          scales: {
+            r: {
+              min: -10,
+              max: 10,
+              ticks: { stepSize: 2 }
+            }
+          },
+          plugins: {
+            legend: { labels: { color: '#f5f5dc' } }
+          }
+        }
+      });
+
       window.scrollTo(0, document.body.scrollHeight);
     });
   </script>
